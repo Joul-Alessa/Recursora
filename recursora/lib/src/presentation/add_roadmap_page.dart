@@ -15,6 +15,8 @@ class AddRoadmapPage extends StatefulWidget {
 class _AddRoadmapPageState extends State<AddRoadmapPage> {
   final TextEditingController _controller = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
+  final TextEditingController _newItemController = TextEditingController();
+
   final LocalFileService fileService = LocalFileService();
 
   List<Map<String, dynamic>> items = [];
@@ -59,71 +61,14 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
     Navigator.pop(context);
   }
 
-  void addItem() {
-    TextEditingController itemController = TextEditingController();
+  void addItemInline() {
+    final text = _newItemController.text.trim();
+    if (text.isEmpty) return;
 
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Add item"),
-        content: TextField(
-          controller: itemController,
-          decoration: InputDecoration(labelText: "Item name"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              final text = itemController.text.trim();
-              if (text.isNotEmpty) {
-                setState(() {
-                  items.add({"item": text});
-                });
-              }
-              Navigator.pop(context);
-            },
-            child: Text("Add"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void editItem(int index) {
-    TextEditingController itemController =
-        TextEditingController(text: items[index]["item"]);
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text("Edit item"),
-        content: TextField(
-          controller: itemController,
-          decoration: InputDecoration(labelText: "Item name"),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text("Cancel"),
-          ),
-          TextButton(
-            onPressed: () {
-              final text = itemController.text.trim();
-              if (text.isNotEmpty) {
-                setState(() {
-                  items[index]["item"] = text;
-                });
-              }
-              Navigator.pop(context);
-            },
-            child: Text("Save"),
-          ),
-        ],
-      ),
-    );
+    setState(() {
+      items.add({"item": text});
+      _newItemController.clear();
+    });
   }
 
   @override
@@ -140,14 +85,11 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
           )
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: addItem,
-        child: Icon(Icons.add),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            // Nombre
             TextField(
               controller: _controller,
               decoration: InputDecoration(
@@ -156,6 +98,8 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
               ),
             ),
             SizedBox(height: 16),
+
+            // Descripción
             TextField(
               controller: _descriptionController,
               decoration: InputDecoration(
@@ -166,7 +110,7 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
             ),
             SizedBox(height: 16),
 
-            // LISTA DE ÍTEMS
+            // LISTA INLINE
             Expanded(
               child: ReorderableListView(
                 onReorder: (oldIndex, newIndex) {
@@ -191,22 +135,30 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                   for (int i = 0; i < items.length; i++)
                     ListTile(
                       key: ValueKey(i),
-                      title: Text(items[i]["item"]),
-                      leading: Radio<int>(
-                        value: i,
-                        groupValue: currentIndex,
+                      leading: ReorderableDragStartListener(
+                        index: i,
+                        child: Icon(Icons.drag_handle),
+                      ),
+                      title: TextField(
+                        controller: TextEditingController(text: items[i]["item"]),
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                        ),
                         onChanged: (value) {
-                          setState(() {
-                            currentIndex = value!;
-                          });
+                          items[i]["item"] = value;
                         },
                       ),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: Icon(Icons.edit),
-                            onPressed: () => editItem(i),
+                          Radio<int>(
+                            value: i,
+                            groupValue: currentIndex,
+                            onChanged: (value) {
+                              setState(() {
+                                currentIndex = value!;
+                              });
+                            },
                           ),
                           IconButton(
                             icon: Icon(Icons.delete),
@@ -221,9 +173,30 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                           ),
                         ],
                       ),
-                    )
+                    ),
                 ],
               ),
+            ),
+
+            // AÑADIR NUEVO ÍTEM INLINE
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _newItemController,
+                    decoration: InputDecoration(
+                      labelText: "New item",
+                      border: OutlineInputBorder(),
+                    ),
+                    onSubmitted: (_) => addItemInline(),
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: addItemInline,
+                  child: Text("Add"),
+                ),
+              ],
             ),
           ],
         ),
