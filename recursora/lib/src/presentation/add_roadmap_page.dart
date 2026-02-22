@@ -14,20 +14,23 @@ class AddRoadmapPage extends StatefulWidget {
 
 class _AddRoadmapPageState extends State<AddRoadmapPage> {
   final TextEditingController _controller = TextEditingController();
+  final TextEditingController _descriptionController = TextEditingController();
   final LocalFileService fileService = LocalFileService();
 
   @override
   void initState() {
     super.initState();
 
-    // Si estamos editando, precargar el nombre
+    // Si estamos editando, precargar el nombre y descripción
     if (widget.roadmap != null) {
       _controller.text = widget.roadmap!["name"] ?? "";
+      _descriptionController.text = widget.roadmap!["description"] ?? "";
     }
   }
 
   Future<void> saveRoadmap() async {
     final name = _controller.text.trim();
+    final description = _descriptionController.text.trim();
     if (name.isEmpty) return;
 
     final content = await fileService.readRoadmaps();
@@ -36,13 +39,15 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
     if (widget.roadmap == null) {
       // CREAR
       final newRoadmap = {
-        "name": name
+        "name": name,
+        "description": description
       };
       data["roadmaps"].add(newRoadmap);
     } else {
       // EDITAR
       final i = widget.index!;
       data["roadmaps"][i]["name"] = name;
+      data["roadmaps"][i]["description"] = description;
     }
 
     await fileService.writeRoadmaps(jsonEncode(data));
@@ -65,12 +70,25 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: TextField(
-          controller: _controller,
-          decoration: InputDecoration(
-            labelText: "Group name",
-            border: OutlineInputBorder(),
-          ),
+        child: Column(
+          children: [
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                labelText: "Group name",
+                border: OutlineInputBorder(),
+              ),
+            ),
+            SizedBox(height: 16),
+            TextField(
+              controller: _descriptionController,
+              decoration: InputDecoration(
+                labelText: "Description",
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 4,
+            ),
+          ],
         ),
       ),
     );

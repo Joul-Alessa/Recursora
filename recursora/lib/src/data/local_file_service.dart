@@ -16,7 +16,8 @@ class LocalFileService {
     if (!await file.exists()) {
       const initialContent = '''
 {
-  "roadmaps": []
+  "roadmaps": [],
+  "recursora_version": "1.0.0"
 }
 ''';
       await file.writeAsString(initialContent);
