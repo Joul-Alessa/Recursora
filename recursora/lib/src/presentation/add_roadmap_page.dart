@@ -17,14 +17,19 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
   final TextEditingController _descriptionController = TextEditingController();
   final LocalFileService fileService = LocalFileService();
 
+  List<Map<String, dynamic>> items = [];
+  int currentIndex = 0;
+
   @override
   void initState() {
     super.initState();
 
-    // Si estamos editando, precargar el nombre y descripción
     if (widget.roadmap != null) {
       _controller.text = widget.roadmap!["name"] ?? "";
       _descriptionController.text = widget.roadmap!["description"] ?? "";
+
+      items = List<Map<String, dynamic>>.from(widget.roadmap!["items"] ?? []);
+      currentIndex = widget.roadmap!["currentIndex"] ?? 0;
     }
   }
 
@@ -36,22 +41,89 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
     final content = await fileService.readRoadmaps();
     final data = jsonDecode(content);
 
+    final newRoadmap = {
+      "name": name,
+      "description": description,
+      "currentIndex": currentIndex,
+      "items": items,
+    };
+
     if (widget.roadmap == null) {
-      // CREAR
-      final newRoadmap = {
-        "name": name,
-        "description": description
-      };
       data["roadmaps"].add(newRoadmap);
     } else {
-      // EDITAR
       final i = widget.index!;
-      data["roadmaps"][i]["name"] = name;
-      data["roadmaps"][i]["description"] = description;
+      data["roadmaps"][i] = newRoadmap;
     }
 
     await fileService.writeRoadmaps(jsonEncode(data));
     Navigator.pop(context);
+  }
+
+  void addItem() {
+    TextEditingController itemController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("Add item"),
+        content: TextField(
+          controller: itemController,
+          decoration: InputDecoration(labelText: "Item name"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              final text = itemController.text.trim();
+              if (text.isNotEmpty) {
+                setState(() {
+                  items.add({"item": text});
+                });
+              }
+              Navigator.pop(context);
+            },
+            child: Text("Add"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void editItem(int index) {
+    TextEditingController itemController =
+        TextEditingController(text: items[index]["item"]);
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text("Edit item"),
+        content: TextField(
+          controller: itemController,
+          decoration: InputDecoration(labelText: "Item name"),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              final text = itemController.text.trim();
+              if (text.isNotEmpty) {
+                setState(() {
+                  items[index]["item"] = text;
+                });
+              }
+              Navigator.pop(context);
+            },
+            child: Text("Save"),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -67,6 +139,10 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
             onPressed: saveRoadmap,
           )
         ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: addItem,
+        child: Icon(Icons.add),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -86,7 +162,68 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                 labelText: "Description",
                 border: OutlineInputBorder(),
               ),
-              maxLines: 4,
+              maxLines: 3,
+            ),
+            SizedBox(height: 16),
+
+            // LISTA DE ÍTEMS
+            Expanded(
+              child: ReorderableListView(
+                onReorder: (oldIndex, newIndex) {
+                  setState(() {
+                    if (newIndex > oldIndex) newIndex--;
+                    final item = items.removeAt(oldIndex);
+                    items.insert(newIndex, item);
+
+                    // Ajustar currentIndex si es necesario
+                    if (currentIndex == oldIndex) {
+                      currentIndex = newIndex;
+                    } else if (oldIndex < currentIndex &&
+                        newIndex >= currentIndex) {
+                      currentIndex--;
+                    } else if (oldIndex > currentIndex &&
+                        newIndex <= currentIndex) {
+                      currentIndex++;
+                    }
+                  });
+                },
+                children: [
+                  for (int i = 0; i < items.length; i++)
+                    ListTile(
+                      key: ValueKey(i),
+                      title: Text(items[i]["item"]),
+                      leading: Radio<int>(
+                        value: i,
+                        groupValue: currentIndex,
+                        onChanged: (value) {
+                          setState(() {
+                            currentIndex = value!;
+                          });
+                        },
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.edit),
+                            onPressed: () => editItem(i),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.delete),
+                            onPressed: () {
+                              setState(() {
+                                items.removeAt(i);
+                                if (currentIndex >= items.length) {
+                                  currentIndex = 0;
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    )
+                ],
+              ),
             ),
           ],
         ),
