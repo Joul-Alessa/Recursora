@@ -89,6 +89,7 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
         padding: const EdgeInsets.all(16.0),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Nombre
               TextField(
@@ -110,6 +111,15 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                 maxLines: 3,
               ),
               SizedBox(height: 16),
+
+              Text(
+                "Items",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blueGrey,
+                ),
+              ),
 
               // LISTA INLINE
               ReorderableListView(
@@ -146,6 +156,10 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                         decoration: InputDecoration(
                           border: InputBorder.none,
                         ),
+                        style: TextStyle(
+                          fontWeight: i == currentIndex ? FontWeight.bold : FontWeight.normal,
+                          color: i == currentIndex ? Colors.blue : Colors.black,
+                        ),
                         onChanged: (value) {
                           items[i]["item"] = value;
                         },
@@ -153,6 +167,20 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Texto "Current"
+                          if (i == currentIndex)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: Text(
+                                "Current",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.blueGrey,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                            
                           Radio<int>(
                             value: i,
                             groupValue: currentIndex,
@@ -162,6 +190,7 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                               });
                             },
                           ),
+
                           IconButton(
                             icon: Icon(Icons.delete),
                             onPressed: () {
@@ -175,9 +204,10 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                           ),
                         ],
                       ),
-                    ),
+                    )
                 ],
               ),
+
               if (items.isNotEmpty) SizedBox(height: 16),
 
               // AÑADIR NUEVO ÍTEM INLINE
