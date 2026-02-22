@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import '../data/local_file_service.dart';
 import 'dart:convert';
 
-class AddExercisePage extends StatefulWidget {
-  final Map<String, dynamic>? exercise; // null = crear, no null = editar
+class AddRoadmapPage extends StatefulWidget {
+  final Map<String, dynamic>? roadmap; // null = crear, no null = editar
   final int? index;
 
-  AddExercisePage({this.exercise, this.index});
+  AddRoadmapPage({this.roadmap, this.index});
 
   @override
-  State<AddExercisePage> createState() => _AddExercisePageState();
+  State<AddRoadmapPage> createState() => _AddRoadmapPageState();
 }
 
-class _AddExercisePageState extends State<AddExercisePage> {
+class _AddRoadmapPageState extends State<AddRoadmapPage> {
   final TextEditingController _controller = TextEditingController();
   final LocalFileService fileService = LocalFileService();
 
@@ -21,45 +21,45 @@ class _AddExercisePageState extends State<AddExercisePage> {
     super.initState();
 
     // Si estamos editando, precargar el nombre
-    if (widget.exercise != null) {
-      _controller.text = widget.exercise!["name"] ?? "";
+    if (widget.roadmap != null) {
+      _controller.text = widget.roadmap!["name"] ?? "";
     }
   }
 
-  Future<void> saveExercise() async {
+  Future<void> saveRoadmap() async {
     final name = _controller.text.trim();
     if (name.isEmpty) return;
 
-    final content = await fileService.readExercises();
+    final content = await fileService.readRoadmaps();
     final data = jsonDecode(content);
 
-    if (widget.exercise == null) {
+    if (widget.roadmap == null) {
       // CREAR
-      final newExercise = {
+      final newRoadmap = {
         "name": name
       };
-      data["exercises"].add(newExercise);
+      data["roadmaps"].add(newRoadmap);
     } else {
       // EDITAR
       final i = widget.index!;
-      data["exercises"][i]["name"] = name;
+      data["roadmaps"][i]["name"] = name;
     }
 
-    await fileService.writeExercises(jsonEncode(data));
+    await fileService.writeRoadmaps(jsonEncode(data));
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final isEditing = widget.exercise != null;
+    final isEditing = widget.roadmap != null;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? "Editar ejercicio" : "Nuevo ejercicio"),
+        title: Text(isEditing ? "Edit group" : "New group"),
         actions: [
           IconButton(
             icon: Icon(Icons.check),
-            onPressed: saveExercise,
+            onPressed: saveRoadmap,
           )
         ],
       ),
@@ -68,7 +68,7 @@ class _AddExercisePageState extends State<AddExercisePage> {
         child: TextField(
           controller: _controller,
           decoration: InputDecoration(
-            labelText: "Nombre del ejercicio",
+            labelText: "Group name",
             border: OutlineInputBorder(),
           ),
         ),
