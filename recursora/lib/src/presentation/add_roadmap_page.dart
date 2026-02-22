@@ -87,32 +87,34 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            // Nombre
-            TextField(
-              controller: _controller,
-              decoration: InputDecoration(
-                labelText: "Group name",
-                border: OutlineInputBorder(),
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              // Nombre
+              TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  labelText: "Group name",
+                  border: OutlineInputBorder(),
+                ),
               ),
-            ),
-            SizedBox(height: 16),
+              SizedBox(height: 16),
 
-            // Descripción
-            TextField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: "Description",
-                border: OutlineInputBorder(),
+              // Descripción
+              TextField(
+                controller: _descriptionController,
+                decoration: InputDecoration(
+                  labelText: "Description",
+                  border: OutlineInputBorder(),
+                ),
+                maxLines: 3,
               ),
-              maxLines: 3,
-            ),
-            SizedBox(height: 16),
+              SizedBox(height: 16),
 
-            // LISTA INLINE
-            Expanded(
-              child: ReorderableListView(
+              // LISTA INLINE
+              ReorderableListView(
+                shrinkWrap: true,
+                physics: NeverScrollableScrollPhysics(),
                 onReorder: (oldIndex, newIndex) {
                   setState(() {
                     if (newIndex > oldIndex) newIndex--;
@@ -176,29 +178,30 @@ class _AddRoadmapPageState extends State<AddRoadmapPage> {
                     ),
                 ],
               ),
-            ),
+              if (items.isNotEmpty) SizedBox(height: 16),
 
-            // AÑADIR NUEVO ÍTEM INLINE
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _newItemController,
-                    decoration: InputDecoration(
-                      labelText: "New item",
-                      border: OutlineInputBorder(),
+              // AÑADIR NUEVO ÍTEM INLINE
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _newItemController,
+                      decoration: InputDecoration(
+                        labelText: "New item",
+                        border: OutlineInputBorder(),
+                      ),
+                      onSubmitted: (_) => addItemInline(),
                     ),
-                    onSubmitted: (_) => addItemInline(),
                   ),
-                ),
-                SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: addItemInline,
-                  child: Text("Add"),
-                ),
-              ],
-            ),
-          ],
+                  SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: addItemInline,
+                    child: Text("Add"),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
