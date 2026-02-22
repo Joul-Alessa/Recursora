@@ -116,9 +116,7 @@ class _HomePageState extends State<HomePage> {
             context,
             MaterialPageRoute(builder: (_) => AddExercisePage()),
           );
-          
-          // Refrescar ejercicios al volver
-          await loadExercises();
+          await loadExercises(); // refrescar lista al volver
         },
         child: Icon(Icons.add),
       ),
