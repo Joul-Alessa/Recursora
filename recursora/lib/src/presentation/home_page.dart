@@ -59,14 +59,38 @@ class _HomePageState extends State<HomePage> {
     await loadRoadmaps();
   }
 
+  Future<void> reorderRoadmaps(int oldIndex, int newIndex) async {
+    final content = await fileService.readRoadmaps();
+    final data = jsonDecode(content);
+
+    if (newIndex > oldIndex) {
+      newIndex--;
+    }
+
+    final item = data["roadmaps"].removeAt(oldIndex);
+    data["roadmaps"].insert(newIndex, item);
+
+    await fileService.writeRoadmaps(jsonEncode(data));
+    await loadRoadmaps();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text("Recursora: Focus Cyclic System")),
 
-      body: ListView.builder(
-        itemCount: roadmaps.length,
-        itemBuilder: (context, index) {
+      body: ReorderableListView(
+        onReorder: (oldIndex, newIndex) {
+          setState(() {
+            if (newIndex > oldIndex) {
+              newIndex--;
+            }
+            final item = roadmaps.removeAt(oldIndex);
+            roadmaps.insert(newIndex, item);
+          });
+          reorderRoadmaps(oldIndex, newIndex);
+        },
+        children: List.generate(roadmaps.length, (index) {
           final roadmap = roadmaps[index];
           final items = roadmap["items"] ?? [];
           final currentIndex = roadmap["currentIndex"] ?? 0;
@@ -87,6 +111,7 @@ class _HomePageState extends State<HomePage> {
           }
 
           return Card(
+            key: ValueKey(roadmap["name"]),
             margin: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             elevation: 3,
             child: Padding(
@@ -207,7 +232,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
           );
-        },
+        }),
       ),
 
       floatingActionButton: FloatingActionButton(
